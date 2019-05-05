@@ -12,19 +12,33 @@
         android:layout_alignParentStart="true"
         android:text="Username" />
 
-    <Spinner
+        <Spinner
         android:id="@+id/viewUser"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/listUser" />
 
+    <ImageView
+        android:id="@+id/imageUser"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:layout_below="@+id/viewUser"
+        android:layout_alignParentStart="true"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="150dp"
+        android:layout_marginEnd="150dp"
+        android:src="@mipmap/ic_camera"
+        />
+
     <TextView
         android:id="@+id/textCerv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/viewUser"
+        android:layout_below="@+id/imageUser"
         android:text="Cervejas" />
 
     <TextView
