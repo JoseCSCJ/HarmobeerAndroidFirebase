@@ -1,6 +1,7 @@
 package br.com.opet.tds.harmobeerAndroid.fragment;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -8,21 +9,44 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import br.com.opet.tds.harmobeerAndroid.R;
-import br.com.opet.tds.harmobeerAndroid.model.Usuario;
-import br.com.opet.tds.harmobeerAndroid.repository.Repository;
+
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.AuthCredential;
+
+import com.google.firebase.auth.EmailAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+
+import java.util.Map;
 
 public class PerfilFragment extends Fragment {
 
-    private EditText usernamePer, emailPer, senhaAnt, senhaPer, senhaConf;
+    private EditText usernamePer, senhaAnt, senhaPer, senhaConf;
+    private TextView emailPer;
+    private FirebaseUser mUser;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mAuth = FirebaseAuth.getInstance();
+        mUser = mAuth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
 
     }
 
@@ -32,6 +56,26 @@ public class PerfilFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_perfil, null);
+        usernamePer = view.findViewById(R.id.usernamePer);
+        emailPer = view.findViewById(R.id.emailPer);
+        emailPer.setText(mUser.getEmail());
+        final String idUsuario = (String)getActivity().getIntent().getSerializableExtra("idUsuarioLogado");
+
+        db.collection("usuario").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Map<String, Object> objeto = document.getData();
+                        if (objeto.get("email").toString().compareTo(idUsuario) == 0) {
+                            usernamePer.setText(objeto.get("username").toString());
+                        }
+
+                        }
+                    }
+                }
+            });
+
         Button mButton =  view.findViewById(R.id.editarUsuario);
         Button sButton =  view.findViewById(R.id.alterarSenha);
 
@@ -39,45 +83,53 @@ public class PerfilFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 try{
-                Repository repository = new Repository(getActivity().getApplicationContext());
 
-                Long idUsuario = (Long)getActivity().getIntent().getSerializableExtra("idUsuarioLogado");
-                Usuario usuarioAntigo = repository.getUsuarioRepository().retornarUsuario(idUsuario);
-                Usuario usuarioNovo = repository.getUsuarioRepository().retornarUsuario(idUsuario);
 
-                usernamePer = getActivity().findViewById(R.id.usernamePer);
-                emailPer = getActivity().findViewById(R.id.emailPer);
 
-                if(usernamePer.getText().toString().isEmpty() && emailPer.getText().toString().isEmpty()){
+                emailPer.setText(mUser.getEmail());
+
+
+                if(usernamePer.getText().toString().isEmpty()){
                     Toast.makeText(getActivity().getApplicationContext(),
                             "Necessário preencher para editar as informações...",
                             Toast.LENGTH_SHORT).show();
                 }else {
+                    db.collection("usuario").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if(task.isSuccessful()){
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Map<String,Object> objeto = document.getData();
+                                    if(objeto.get("email").toString().compareTo(idUsuario)==0){
+                                        db.collection("usuario").document(document.getId())
+                                                .update("username",usernamePer.getText().toString())
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        Toast.makeText(getActivity().getApplicationContext(),
+                                                                "O seu username foi alterado para " + usernamePer.getText().toString(),
+                                                                Toast.LENGTH_SHORT).show();
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Toast.makeText(getActivity().getApplicationContext(),
+                                                                "Não foi possível alterar seu username",
+                                                                Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                    };
 
-                    if (usernamePer.getText().toString().isEmpty()) {
-                        usuarioNovo.setUsername(usuarioAntigo.getUsername());
-                    }
-                    if(!usernamePer.getText().toString().isEmpty()){
-                        usuarioNovo.setUsername(usernamePer.getText().toString());
-                    }
-                    if (emailPer.getText().toString().isEmpty()) {
-                        usuarioNovo.setEmail(usuarioAntigo.getEmail());
-                    }
-                    if (!emailPer.getText().toString().isEmpty()
-                            && emailPer.getText().toString().contains("@"))
-                        usuarioNovo.setEmail(emailPer.getText().toString());
-                        repository.getUsuarioRepository().update(usuarioNovo);
-                        Toast.makeText(getActivity().getApplicationContext(),
-                                "O usuario administrador " + usuarioAntigo.getUsername() + " teve seus dados alterados." +
-                                        " Novo Username: " + usuarioNovo.getUsername() +
-                                        " Novo Email: " + usuarioNovo.getEmail(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                    if(!emailPer.getText().toString().contains("@")
-                            && !emailPer.getText().toString().isEmpty()){
-                        Toast.makeText(getActivity().getApplicationContext(),
-                                "Email não válido",
-                                Toast.LENGTH_SHORT).show();
+                                }
+                            }else{
+                                Toast.makeText(getActivity().getApplicationContext(), "Não foi possivel recuperar os dados.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+
+
                     }
 
 
@@ -99,26 +151,51 @@ public class PerfilFragment extends Fragment {
                     senhaPer = getActivity().findViewById(R.id.senhaPer);
                     senhaConf = getActivity().findViewById(R.id.senhaConf);
 
-                    Repository repository = new Repository(getActivity().getApplicationContext());
+                    AuthCredential credential = EmailAuthProvider.getCredential(mUser.getEmail(), senhaAnt.getText().toString());
 
-                    Long idUsuario = (Long) getActivity().getIntent().getSerializableExtra("idUsuarioLogado");
-                    Usuario usuarioAntigo = repository.getUsuarioRepository().retornarUsuario(idUsuario);
-                    Usuario usuarioNovo = repository.getUsuarioRepository().retornarUsuario(idUsuario);
+                    mUser.reauthenticate(credential).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            if (senhaPer.getText().toString().equals(senhaConf.getText().toString()) &&
+                                    senhaPer.getText().toString().length()>4) {
+                                mUser.updatePassword(senhaPer.getText().toString())
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Toast.makeText(getActivity().getApplicationContext(),
+                                                "Sua senha foi alterada com sucesso.",
+                                                Toast.LENGTH_SHORT).show();
+                                        senhaAnt.setText("");
+                                        senhaPer.setText("");
+                                        senhaConf.setText("");
 
+                                    }
+                                })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(getActivity().getApplicationContext(),
+                                                "Não foi possível alterar sua senha, aguarde antes de tentar novamente",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                });
 
-                    if (senhaAnt.getText().toString().compareTo(usuarioAntigo.getSenha()) == 0 &&
-                            senhaPer.getText().toString().compareTo(senhaConf.getText().toString()) == 0 &&
-                            senhaPer.getText().toString().length()>4) {
-                        usuarioNovo.setSenha(senhaPer.getText().toString());
-                        repository.getUsuarioRepository().update(usuarioNovo);
-                        Toast.makeText(getActivity().getApplicationContext(),
-                                "Sua senha foi alterada com sucesso.",
-                                Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getActivity().getApplicationContext(),
-                                "Não foi possível alterar a sua senha. Reveja os dados inseridos.",
-                                Toast.LENGTH_SHORT).show();
-                    }
+                            } else {
+                                System.out.println(senhaPer.getText().toString().equals(senhaConf.getText().toString()));
+                                System.out.println(senhaPer.getText().toString().length());
+                                Toast.makeText(getActivity().getApplicationContext(),
+                                        "Não foi possível alterar a sua senha. Reveja os dados inseridos.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getActivity().getApplicationContext(),
+                                    "Não foi possível alterar a sua senha. A senha atual não foi inserida corretamente",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
 
                 }catch (Throwable t){
@@ -127,9 +204,7 @@ public class PerfilFragment extends Fragment {
                             "Não foi possível alterar a sua senha.",
                             Toast.LENGTH_SHORT).show();
                 }
-                senhaAnt.setText("");
-                senhaPer.setText("");
-                senhaConf.setText("");
+
             }
         });
         return view;

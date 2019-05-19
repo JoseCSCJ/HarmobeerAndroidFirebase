@@ -10,19 +10,15 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import br.com.opet.tds.harmobeerAndroid.DAO.PratoDAO;
 import br.com.opet.tds.harmobeerAndroid.R;
 import br.com.opet.tds.harmobeerAndroid.model.Prato;
 
 
-/**
- * Created by Diego on 24/09/2018.
- */
 
-public class PratoAdapter extends ArrayAdapter<PratoDAO.PratoJoin> {
+public class PratoAdapter extends ArrayAdapter<Prato> {
     private int rId;
 
-    public PratoAdapter(@NonNull Context context, int resource, @NonNull List<PratoDAO.PratoJoin> objects) {
+    public PratoAdapter(@NonNull Context context, int resource, @NonNull List<Prato> objects) {
         super(context, resource, objects);
         rId = resource;
     }
@@ -36,14 +32,12 @@ public class PratoAdapter extends ArrayAdapter<PratoDAO.PratoJoin> {
             mView = inflater.inflate(rId,null);
         }
 
-        PratoDAO.PratoJoin pratoJoin = getItem(position);
+        Prato prato = getItem(position);
 
         TextView textNome = mView.findViewById(R.id.textNomePrato);
-        //TextView textUsuario = mView.findViewById(R.id.textUser);
 
+        textNome.setText(prato.getNome().toUpperCase());
 
-        textNome.setText(pratoJoin.prato.getNome().toUpperCase());
-        //textUsuario.setText("Criado por " + pratoJoin.usuario.getUsername().toUpperCase());
 
         return mView;
     }

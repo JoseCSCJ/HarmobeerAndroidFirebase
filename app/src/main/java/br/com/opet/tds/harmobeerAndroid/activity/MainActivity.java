@@ -15,6 +15,20 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import br.com.opet.tds.harmobeerAndroid.R;
 import br.com.opet.tds.harmobeerAndroid.fragment.CervFragment;
 import br.com.opet.tds.harmobeerAndroid.fragment.PerfilFragment;
@@ -24,11 +38,10 @@ import br.com.opet.tds.harmobeerAndroid.fragment.CriacoesFragment;
 import br.com.opet.tds.harmobeerAndroid.model.Cerveja;
 import br.com.opet.tds.harmobeerAndroid.model.Prato;
 import br.com.opet.tds.harmobeerAndroid.model.Usuario;
-import br.com.opet.tds.harmobeerAndroid.repository.Repository;
+
 
 public class MainActivity extends AppCompatActivity {
-     private TextView mTextMessage;
-     private Repository repository;
+     private TextView mTextMessage, emailPer;
      private Cerveja cerveja;
      private Prato prato;
      private Usuario usuario;
@@ -36,10 +49,13 @@ public class MainActivity extends AppCompatActivity {
      private PratoFragment pratoFragment;
      private UsuarioFragment usuarioFragment;
      private PerfilFragment perfilFragment;
-     private EditText nome, estilo, teor, nomeprato, username, email, senha, usernamePer, emailPer, senhaAnt, senhaPer, senhaConf;
+     private EditText nome, estilo, teor, nomeprato, username, email, senha, senhaUsu, usernamePer, senhaAnt, senhaPer, senhaConf;
      private Spinner listaUsuarios;
     private ListView listaCervejas, listaPratos;
     private Fragment fragment;
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private FirebaseUser mUser;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -78,15 +94,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        repository = new Repository(getApplicationContext());
         cerveja = new Cerveja();
         prato = new Prato();
         usuario = new Usuario();
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        mUser = mAuth.getCurrentUser();
 
-        long idUsuarioLogado = (Long) getIntent().getSerializableExtra("idUsuarioLogado");
-        Usuario usuarioLogado = repository.getUsuarioRepository().retornarUsuario(idUsuarioLogado);
+        final String idUsuarioLogado = (String) getIntent().getSerializableExtra("idUsuarioLogado");
+        db.collection("usuario").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Map<String,Object> objeto = document.getData();
+                        Usuario usuarioLogado = new Usuario();
+                        usuarioLogado.setEmail(objeto.get("email").toString());
+                        usuarioLogado.setUsername(objeto.get("username").toString());
+                        if(usuarioLogado.getEmail().compareTo(idUsuarioLogado)==0) {
+                            System.out.println("O usuario " + usuarioLogado.getUsername() + " logou...");
+                        }
+                    }
+                }else{
+                    Toast.makeText(MainActivity.this, "Não foi possivel recuperar os dados.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
-        System.out.println("O usuario " + usuarioLogado.getUsername()+" logou...");
+
 
         nome = findViewById(R.id.nomecerv);
         estilo = findViewById(R.id.estilo);
@@ -126,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
+                    mAuth.signOut();
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     startActivity(intent);
 
@@ -156,8 +192,8 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    public long retornaUsuarioLogado(){
-        return (Long) getIntent().getSerializableExtra("idUsuarioLogado");
+    public String retornaUsuarioLogado(){
+        return (String) getIntent().getSerializableExtra("idUsuarioLogado");
     }
 
 

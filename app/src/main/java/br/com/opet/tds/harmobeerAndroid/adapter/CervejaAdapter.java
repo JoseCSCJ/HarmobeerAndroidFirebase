@@ -3,29 +3,26 @@ package br.com.opet.tds.harmobeerAndroid.adapter;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import android.util.Log;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
+
 import android.widget.TextView;
 
 import java.util.List;
 
-import br.com.opet.tds.harmobeerAndroid.DAO.CervejaDAO;
+
 import br.com.opet.tds.harmobeerAndroid.R;
+import br.com.opet.tds.harmobeerAndroid.model.Cerveja;
 
 
 
-/**
- * Created by Diego on 24/09/2018.
- */
-
-public class CervejaAdapter extends ArrayAdapter<CervejaDAO.CervejaJoin> {
+public class CervejaAdapter extends ArrayAdapter<Cerveja> {
     private int rId;
 
-    public CervejaAdapter(@NonNull Context context, int resource, @NonNull List<CervejaDAO.CervejaJoin> objects) {
+    public CervejaAdapter(@NonNull Context context, int resource, @NonNull List<Cerveja> objects) {
         super(context, resource, objects);
         rId = resource;
     }
@@ -47,11 +44,11 @@ public class CervejaAdapter extends ArrayAdapter<CervejaDAO.CervejaJoin> {
             ch = (CervejaHolder) mView.getTag();
         }
 
-        CervejaDAO.CervejaJoin cervejaJoin = getItem(position);
+        Cerveja cerveja = getItem(position);
 
-        ch.textNome.setText(cervejaJoin.cerveja.getNome().toUpperCase());
-        ch.textEstilo.setText(cervejaJoin.cerveja.getEstilo().toUpperCase());
-        ch.textTeorAlc.setText(cervejaJoin.cerveja.getTeor_alc() + " %");
+        ch.textNome.setText(cerveja.getNome().toUpperCase());
+        ch.textEstilo.setText(cerveja.getEstilo().toUpperCase());
+        ch.textTeorAlc.setText(cerveja.getTeor_alc() + " %");
 
         return mView;
 

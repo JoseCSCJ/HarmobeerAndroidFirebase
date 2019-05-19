@@ -1,6 +1,7 @@
 package br.com.opet.tds.harmobeerAndroid.fragment;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,21 +12,33 @@ import android.widget.EditText;
 
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+
+import java.util.Map;
 
 
 import br.com.opet.tds.harmobeerAndroid.R;
 import br.com.opet.tds.harmobeerAndroid.model.Cerveja;
-import br.com.opet.tds.harmobeerAndroid.repository.Repository;
+
 
 public class CervFragment extends Fragment {
 
-    private EditText nome, estilo,  teor;
+    private EditText nome, estilo, teor;
+    private FirebaseFirestore db;
+
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
+        db = FirebaseFirestore.getInstance();
     }
 
     @Nullable
@@ -45,19 +58,39 @@ public class CervFragment extends Fragment {
 
                     Cerveja cerveja = new Cerveja();
 
-                    Long idUsuario = (Long) getActivity().getIntent().getSerializableExtra("idUsuarioLogado");
+                    String idUsuario = (String) getActivity().getIntent().getSerializableExtra("idUsuarioLogado");
 
                     cerveja.setNome(nome.getText().toString());
                     cerveja.setEstilo(estilo.getText().toString());
-                    cerveja.setTeor_alc(Long.parseLong(teor.getText().toString()));
+                    cerveja.setTeor_alc(Double.parseDouble(teor.getText().toString()));
                     cerveja.setUsuarioId(idUsuario);
 
-                    Repository repository = new Repository(getActivity().getApplicationContext());
                     if(!cerveja.getNome().isEmpty() && !cerveja.getEstilo().isEmpty()) {
-                        repository.getCervejaRepository().insert(cerveja);
-                        Toast.makeText(getActivity().getApplicationContext(),
-                                "A cerveja " + cerveja.getNome() + " foi adicionada com sucesso!",
-                                Toast.LENGTH_SHORT).show();
+
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("criador", cerveja.getUsuarioId());
+                        data.put("estilo", cerveja.getEstilo() );
+                        data.put("nomecerv", cerveja.getNome());
+                        data.put("teor", cerveja.getTeor_alc());
+                        db.collection("cervejas")
+                                .add(data)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Toast.makeText(getActivity().getApplicationContext(),
+                                                "A cerveja foi adicionada com sucesso!",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                ).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getActivity().getApplicationContext(),
+                                        "Não foi possível adicionar uma nova cerveja no banco de dados",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
                     }
                     else{
                         throw new Exception();

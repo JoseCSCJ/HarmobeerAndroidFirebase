@@ -9,30 +9,45 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import br.com.opet.tds.harmobeerAndroid.R;
 import br.com.opet.tds.harmobeerAndroid.model.Prato;
-import br.com.opet.tds.harmobeerAndroid.repository.Repository;
+
 
 public class AtualizarPrato extends AppCompatActivity {
 
     private EditText nome, estilo, teor;
     private TextView dados;
-    private Repository repository;
+    private FirebaseFirestore db;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_atualizar_prato);
+        db = FirebaseFirestore.getInstance();
         try {
-            repository = new Repository(getApplicationContext());
-            Prato c = repository.getPratoRepository().loadPratoByID(getIntent().getLongExtra("ID", 0));
-            dados = findViewById(R.id.dadosPrato);
-            dados.setText("Prato: " + c.getNome());
+            db.collection("pratos")
+                    .document(getIntent().getStringExtra("ID"))
+                    .get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @Override
+                        public void onSuccess(DocumentSnapshot document) {
+                            Prato c = new Prato();
+                            c.setNome(document.get("nomeprato").toString());
 
-            nome = findViewById(R.id.nomeprato);
+                            dados = findViewById(R.id.dadosPrato);
+                            dados.setText("Prato: " + c.getNome());
 
-            nome.setText(c.getNome(), TextView.BufferType.EDITABLE);
+                            nome = findViewById(R.id.nomeprato);
+
+                            nome.setText(c.getNome(), TextView.BufferType.EDITABLE);
+                        }
+                    });
+
+
         }catch(Throwable t){
             t.printStackTrace();
             Toast.makeText(getApplicationContext(),
@@ -44,18 +59,25 @@ public class AtualizarPrato extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    Prato c = repository.getPratoRepository().loadPratoByID(getIntent().getLongExtra("ID", 0));
-
+                    Prato c = new Prato();
                     c.setNome(nome.getText().toString());
                     if(!c.getNome().isEmpty()) {
-                        repository.getPratoRepository().update(c);
-                        Toast.makeText(getApplicationContext(),
-                                "O prato " + c.getNome() + " foi atualizado com sucesso!",
-                                Toast.LENGTH_SHORT).show();
+                        db.collection("pratos")
+                                .document(getIntent().getStringExtra("ID"))
+                                .update("nomeprato", c.getNome()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(getApplicationContext(),
+                                        "O prato " + nome.getText().toString() + " foi atualizado com sucesso!",
+                                        Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(AtualizarPrato.this, MainActivity.class);
+                                intent.putExtra("idUsuarioLogado", getIntent().getStringExtra("idUsuarioLogado"));
+                                startActivity(intent);
+                            }
+                        });
 
-                        Intent intent = new Intent(AtualizarPrato.this, MainActivity.class);
-                        intent.putExtra("idUsuarioLogado", getIntent().getLongExtra("idUsuarioLogado",0));
-                        startActivity(intent);
+
+
                     }
                     else{
                         throw new Exception();
@@ -75,16 +97,22 @@ public class AtualizarPrato extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    Prato c = repository.getPratoRepository().loadPratoByID(getIntent().getLongExtra("ID", 0));
-                    long idPrato = c.getId();
-                    repository.getPratoRepository().delete(idPrato);
-                        Toast.makeText(getApplicationContext(),
-                                "O prato " + c.getNome() + " foi deletado com sucesso!",
-                                Toast.LENGTH_SHORT).show();
+                    db.collection("pratos")
+                            .document(getIntent().getStringExtra("ID"))
+                            .delete()
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Toast.makeText(getApplicationContext(),
+                                            "O prato foi deletado com sucesso!",
+                                            Toast.LENGTH_SHORT).show();
 
-                        Intent intent = new Intent(AtualizarPrato.this, MainActivity.class);
-                        intent.putExtra("idUsuarioLogado", getIntent().getLongExtra("idUsuarioLogado",0));
-                        startActivity(intent);
+                                    Intent intent = new Intent(AtualizarPrato.this, MainActivity.class);
+                                    intent.putExtra("idUsuarioLogado", getIntent().getStringExtra("idUsuarioLogado"));
+                                    startActivity(intent);
+                                }
+                            });
+
                     }
                 catch (Throwable t){
                     t.printStackTrace();

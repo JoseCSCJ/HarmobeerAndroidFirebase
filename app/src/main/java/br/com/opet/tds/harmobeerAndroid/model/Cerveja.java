@@ -1,41 +1,33 @@
 package br.com.opet.tds.harmobeerAndroid.model;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.ForeignKey;
-import android.arch.persistence.room.PrimaryKey;
+
 
 /**
- * Created by José Carlos on 18/11//2018.
+ * Created by José Carlos on 18/11/2018.
  */
 
-@Entity(tableName = "cerveja_table",
-        foreignKeys = @ForeignKey(entity = Usuario.class,
-            parentColumns = "ID",
-            childColumns = "usuario_id"))
+
 public class Cerveja {
 
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "ID")
-    private long ID;
+
+    private String ID;
     private String nome;
     private String estilo;
     private double teor_alc;
-    @ColumnInfo(name = "usuario_id")
-    private long usuarioId;
+    private String usuarioId;
 
     public Cerveja(){}
-    public Cerveja(long ID, String nome, String estilo, double teor_alc) {
+    public Cerveja(String ID, String nome, String estilo, double teor_alc) {
         this.ID = ID;
         this.nome = nome;
         this.estilo = estilo;
         this.teor_alc = teor_alc;
     }
 
-    public long getID() {
+    public String getID() {
         return ID;
     }
-    public void setID(long ID) {
+    public void setID(String ID) {
         this.ID = ID;
     }
 
@@ -60,11 +52,11 @@ public class Cerveja {
         this.teor_alc = teor_alc;
     }
 
-    public long getUsuarioId() {
+    public String getUsuarioId() {
         return usuarioId;
     }
 
-    public void setUsuarioId(long usuarioId) {
+    public void setUsuarioId(String usuarioId) {
         this.usuarioId = usuarioId;
     }
 }

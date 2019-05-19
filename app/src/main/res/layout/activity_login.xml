@@ -10,14 +10,8 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="br.com.opet.tds.harmobeerAndroid.activity.LoginActivity">
 
-    <!-- Login progress -->
-    <ProgressBar
-        android:id="@+id/login_progress"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone" />
+
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -30,18 +24,9 @@
         android:text="Painel do Administrador"
         android:textSize="30sp"
         />
-    <ScrollView
-        android:id="@+id/login_form"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
 
-        <LinearLayout
-            android:id="@+id/email_login_form"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
 
-            <AutoCompleteTextView
+            <EditText
                 android:id="@+id/email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -65,12 +50,11 @@
             <Button
                 android:id="@+id/email_sign_in_button"
                 style="?android:textAppearanceSmall"
+                android:onClick="signIn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="@string/action_sign_in"
                 android:textStyle="bold" />
 
-        </LinearLayout>
-    </ScrollView>
 </LinearLayout>
